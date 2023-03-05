@@ -2,7 +2,7 @@
 
 namespace LeaveManagement.Web.Data
 {
-    public partial class BaseEntity
+    public abstract class BaseEntity
     {
         public int Id { get; set; }
         public DateTime DateCreated { get; set; }

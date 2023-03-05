@@ -7,7 +7,7 @@
 <h1>Index</h1>
 
 <p>
-    <a asp-action="Create">Create New</a>
+    <button asp-action="Create" class="btn btn-success"><i class="fa-solid fa-plus"></i> Create New</button>
 </p>
 <table class="table">
     <thead>
@@ -31,10 +31,10 @@
                 @Html.DisplayFor(modelItem => item.DefaultDays)
             </td>
             <td>
-                <div class="btn-group-sm" role="group" aria-label="Edit Details Delete button group">
-                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-primary">Edit</a>
-                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info">Details</a>
-                    <button data-id="@item.Id" class="btn btn-danger deleteBtn" type="button">Delete</button>
+                <div class="btn-group-md" role="group" aria-label="Edit Details Delete button group">
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-primary"><i class="fa-solid fa-pen-to-square"></i></a>
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info"><i class="fa-solid fa-circle-info"></i></a>
+                    <button data-id="@item.Id" class="btn btn-danger deleteBtn" type="button"><i class="fa-solid fa-delete-left"></i></button>
                 </div>
             </td>
         </tr>
@@ -49,6 +49,9 @@
 @section Scripts{
     <script>
         $(function(){
+
+            $('.table').DataTable();
+
             $('.deleteBtn').click(function(e){
                 swal({
                     title: "Are you sure?",

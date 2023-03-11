@@ -1,6 +1,7 @@
 using LeaveManagement.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using LeaveManagement.Web.Models.Configurations;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 

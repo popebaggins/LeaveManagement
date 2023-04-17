@@ -5,42 +5,43 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using LeaveManagement.Web.Data;
+using LeaveManagement.Data;
 using AutoMapper;
-using LeaveManagement.Web.Models;
+using LeaveManagement.Common.Models;
+using LeaveManagement.Application.Contracts;
 using Microsoft.AspNetCore.Authorization;
-using LeaveManagement.Web.Constants;
+using LeaveManagement.Common.Constants;
+
 
 namespace LeaveManagement.Web.Controllers
 {
     [Authorize(Roles = Roles.Administrator)]
     public class LeaveTypesController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ILeaveTypeRepository leaveTypeRepository;
+        private readonly ILeaveAllocationRepository leaveAllocationRepository;
         private readonly IMapper mapper;
 
-        public LeaveTypesController(ApplicationDbContext context, IMapper mapper)
+        public LeaveTypesController(ILeaveTypeRepository leaveTypeRepository,
+            ILeaveAllocationRepository leaveAllocationRepository,
+            IMapper mapper)
         {
-            _context = context;
+            this.leaveTypeRepository = leaveTypeRepository;
+            this.leaveAllocationRepository = leaveAllocationRepository;
             this.mapper = mapper;
         }
 
         // GET: LeaveTypes
         public async Task<IActionResult> Index()
         {
-            var leaveTypes = mapper.Map<List<LeaveTypeVM>>(await _context.LeaveTypes.ToListAsync());
-              return View(leaveTypes);
+            var leaveTypes = mapper.Map<List<LeaveTypeVM>>(await leaveTypeRepository.GetAllAsync());
+            return View(leaveTypes);
         }
 
         // GET: LeaveTypes/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null || _context.LeaveTypes == null)
-            {
-                return NotFound();
-            }
-
-            var leaveType = await _context.LeaveTypes.FindAsync(id);
+            var leaveType = await leaveTypeRepository.GetAsync(id);
             if (leaveType == null)
             {
                 return NotFound();
@@ -65,28 +66,15 @@ namespace LeaveManagement.Web.Controllers
             if (ModelState.IsValid)
             {
                 var leaveType = mapper.Map<LeaveType>(leaveTypeVM);
-                _context.Add(leaveType);
-                await _context.SaveChangesAsync();
+                await leaveTypeRepository.AddAsync(leaveType);
                 return RedirectToAction(nameof(Index));
             }
             return View(leaveTypeVM);
         }
 
-        // GET: LeaveTypes/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        public IActionResult Edit()
         {
-            if (id == null || _context.LeaveTypes == null)
-            {
-                return NotFound();
-            }
-
-            var leaveType = await _context.LeaveTypes.FindAsync(id);
-            if (leaveType == null)
-            {
-                return NotFound();
-            }
-            var leaveTypeVM = mapper.Map<LeaveTypeVM>(leaveType);
-            return View(leaveTypeVM);
+            return View();
         }
 
         // POST: LeaveTypes/Edit/5
@@ -101,17 +89,23 @@ namespace LeaveManagement.Web.Controllers
                 return NotFound();
             }
 
+            var leaveType = await leaveTypeRepository.GetAsync(id);
+
+            if (leaveType == null) 
+            {
+                return NotFound();
+            }
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var leaveType = mapper.Map<LeaveType>(leaveTypeVM);
-                    _context.Update(leaveType);
-                    await _context.SaveChangesAsync();
+                    mapper.Map(leaveTypeVM, leaveType);
+                    await leaveTypeRepository.UpdateAsync(leaveType);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!LeaveTypeExists(leaveTypeVM.Id))
+                    if (!await LeaveTypeExistsAsync(leaveTypeVM.Id))
                     {
                         return NotFound();
                     }
@@ -125,46 +119,26 @@ namespace LeaveManagement.Web.Controllers
             return View(leaveTypeVM);
         }
 
-        // GET: LeaveTypes/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null || _context.LeaveTypes == null)
-            {
-                return NotFound();
-            }
-
-            var leaveType = await _context.LeaveTypes
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (leaveType == null)
-            {
-                return NotFound();
-            }
-
-            return View(leaveType);
-        }
-
         // POST: LeaveTypes/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (_context.LeaveTypes == null)
-            {
-                return Problem("Entity set 'ApplicationDbContext.LeaveTypes'  is null.");
-            }
-            var leaveType = await _context.LeaveTypes.FindAsync(id);
-            if (leaveType != null)
-            {
-                _context.LeaveTypes.Remove(leaveType);
-            }
-            
-            await _context.SaveChangesAsync();
+            await leaveTypeRepository.DeleteAsync(id);
             return RedirectToAction(nameof(Index));
         }
 
-        private bool LeaveTypeExists(int id)
+        private async Task<bool> LeaveTypeExistsAsync(int id)
         {
-          return _context.LeaveTypes.Any(e => e.Id == id);
+          return await leaveTypeRepository.Exists(id);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AllocateLeave(int id) 
+        {
+            await leaveAllocationRepository.LeaveAllocation(id);
+            return RedirectToAction(nameof(Index));
         }
     }
 }

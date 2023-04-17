@@ -1,0 +1,95 @@
+﻿@model EmployeeLeaveRequestViewVM
+
+@{
+    ViewData["Title"] = "My Leave";
+}
+
+<h1>My Allocations</h1>
+
+@foreach (var allocation in Model.LeaveAllocations)
+{
+        <ul class="list-group list-group-horizontal">
+            <li class="list-group-item flex-fill"><h6>@allocation.LeaveType.Name</h6></li>
+            <li class="list-group-item flex-fill"><button type="button" class="btn btn-primary w-100">Allocated Days <span class="badge bg-secondary">@allocation.LeaveType.DefaultDays</span></button></li>
+            <li class="list-group-item flex-fill"><button type="button" class="btn btn-primary w-100">Remaining Days <span class="badge bg-secondary">@allocation.NumberOfDays</span></button></li>
+        </ul>
+}
+
+<h2>My Requests</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.LeaveRequests[0].StartDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.LeaveRequests[0].EndDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.LeaveRequests[0].LeaveType.Name)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.LeaveRequests[0].DateRequested)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.LeaveRequests[0].RequestComments)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.LeaveRequests[0].Approved)
+            </th>
+
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.LeaveRequests)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.StartDate)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.EndDate)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.LeaveType.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.DateRequested)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.RequestComments)
+                </td>
+                <td>
+                    @if (item.Cancelled)
+                    {
+                        <span class="badge bg-warning">Cancelled</span>
+                    }
+                    else if(item.Approved == null)
+                    {
+                        <span class="badge bg-info">Pending</span>
+                    }
+                    else if(item.Approved.Value)
+                    {
+                        <span class="badge bg-success">Approved</span>
+                    }
+                    else if(!item.Approved.Value)
+                    {
+                        <span class="badge bg-warning">Denied</span>
+                    }
+                </td>
+                <td>
+                    @if(item.Approved == null)
+                    {
+                        <form asp-action="Cancel">
+                            <input name="id" value="@item.Id" type="hidden" />
+                            <button class="btn btn-danger btn-sm" type="submit">Cancel Request</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
